@@ -41,7 +41,10 @@ const PLANS = ['free', 'pro']; // NOT enterprise — those are rule-targeted, no
 const rand = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 async function main() {
-  const client = ld.init(SDK_KEY);
+  // Experiments emit a full event per evaluation (not summarized), so raise the
+  // event queue capacity well above our visitor count and flush in batches to
+  // avoid dropping events.
+  const client = ld.init(SDK_KEY, { capacity: 100000, flushInterval: 2 });
   await client.waitForInitialization({ timeout: 10 });
   console.log(`Simulating ${COUNT} visitors against "new-landing-hero"…`);
 
@@ -70,9 +73,16 @@ async function main() {
       client.track('hero-cta-click', context);
       conversions++;
     }
+
+    // Flush periodically so the queue never fills up.
+    if (i > 0 && i % 1000 === 0) {
+      await client.flush();
+    }
   }
 
   await client.flush();
+  // Give the final flush time to reach LaunchDarkly before closing.
+  await new Promise((r) => setTimeout(r, 1500));
   console.log(`Done. Fired ${conversions} "hero-cta-click" events (~${((conversions / COUNT) * 100).toFixed(1)}%).`);
   console.log('Open the experiment in LaunchDarkly to watch results populate.');
   await client.close();

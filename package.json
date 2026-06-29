@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "bootstrap": "node scripts/bootstrap-launchdarkly.mjs",
+    "experiment": "node scripts/setup-experiment.mjs",
     "traffic": "node scripts/generate-traffic.mjs",
     "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "npm --workspace server run dev",

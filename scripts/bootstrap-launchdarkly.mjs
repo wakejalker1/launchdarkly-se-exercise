@@ -112,10 +112,11 @@ async function ensureFlag({ key, name, description }) {
     key,
     name,
     description,
+    // Boolean flags auto-create true (index 0) / false (index 1) variations and
+    // sensible defaults, so we don't specify variations/defaults ourselves.
     kind: 'boolean',
     // CRITICAL: make the flag available to the client-side (browser) SDK.
     clientSideAvailability: { usingEnvironmentId: true, usingMobileKey: false },
-    defaults: { onVariation: 0, offVariation: 1 }, // 0 = true, 1 = false
     tags: TAGS,
   });
   if (!created.ok) fail(`create flag "${key}"`, created);
@@ -202,14 +203,29 @@ async function ensureMetric() {
 // --- 7. Remediation trigger -------------------------------------------------
 async function ensureTrigger() {
   log('\n7) Remediation trigger on "release-recommendations"');
+  // The trigger URL is a SECRET and LaunchDarkly only returns it UNMASKED at
+  // creation time (GET returns a masked, non-working value). So our strategy is:
+  //   - if a trigger exists AND we already saved its URL locally, reuse it;
+  //   - otherwise delete any existing trigger and create a fresh one so we can
+  //     capture a working URL. This keeps re-runs self-healing.
+  const file = resolve(ROOT, 'trigger-url.local.txt');
   const existing = await ld(
     'GET',
     `/flags/${PROJECT}/release-recommendations/triggers/${ENV}`
   );
-  if (existing.ok && Array.isArray(existing.json?.items) && existing.json.items.length > 0) {
-    skip('a trigger already exists — open it in LD to view its URL');
+  const existingItems = Array.isArray(existing.json?.items) ? existing.json.items : [];
+
+  if (existingItems.length > 0 && existsSync(file)) {
+    skip('trigger already exists — re-using the URL saved in trigger-url.local.txt');
+    log(`  curl -X POST "$(cat trigger-url.local.txt)"\n`);
     return;
   }
+
+  // Remove any existing trigger(s) whose secret URL we can't recover.
+  for (const t of existingItems) {
+    await ld('DELETE', `/flags/${PROJECT}/release-recommendations/triggers/${ENV}/${t._id}`);
+  }
+
   const res = await ld(
     'POST',
     `/flags/${PROJECT}/release-recommendations/triggers/${ENV}`,
@@ -220,12 +236,9 @@ async function ensureTrigger() {
     warn(JSON.stringify(res.json));
     return;
   }
-  const url = res.json.triggerUrl;
-  // The trigger URL is a SECRET (anyone with it can fire it). Save it to a
-  // git-ignored file and print it.
-  const file = resolve(ROOT, 'trigger-url.local.txt');
-  writeFileSync(file, url + '\n');
+  const url = res.json.triggerURL;
   ok('created trigger (turns the flag OFF when fired)');
+  writeFileSync(file, url + '\n');
   log('\n  \x1b[1mRemediation trigger URL\x1b[0m (saved to trigger-url.local.txt):');
   log(`  \x1b[36m${url}\x1b[0m`);
   log('  Fire it to kill the feature instantly:');

@@ -132,28 +132,32 @@ It prints the **remediation trigger URL** (also saved to
 ### Extra credit — Experimentation  📊
 
 The bootstrap script created the **`hero-cta-click`** metric and the targeting
-flag. To run the experiment:
+flag. Now create + start the experiment and feed it data:
 
-1. In LaunchDarkly: **Experiments → Create experiment**.
-   - Hypothesis: *"The new hero increases CTA click‑through."*
-   - Flag: **`new-landing-hero`**, randomization unit **user**.
-   - Variations: `true` (treatment) vs `false` (control).
-   - Metric: **`hero-cta-click`**.
-   - Audience: the fallthrough rollout (split remaining users 50/50).
-   - **Start** the experiment.
-2. Generate traffic so there's data to analyze (the real site sees ~40k/day):
+```bash
+# 1. Create AND start the experiment (50/50 control vs treatment on the
+#    fallthrough audience, primary metric = hero-cta-click).
+npm run experiment
 
-   ```bash
-   npm run traffic           # simulates 2000 visitors
-   npm run traffic 5000      # or pass a custom count
-   ```
+# 2. Generate traffic so there's data to analyze (the real site sees ~40k/day).
+npm run traffic 5000      # simulate 5000 visitors (default 2000)
+```
 
-   The generator evaluates the flag and fires `hero-cta-click` with the
-   treatment converting slightly better than control, so the experiment shows a
-   realistic, detectable lift.
-3. Open the experiment to watch results populate. Run `npm run traffic` a few
-   times (or let it run) until LaunchDarkly reports statistical significance,
-   then make your ship/no‑ship call.
+`npm run experiment` builds the whole experiment via the REST API:
+hypothesis *"the new hero increases CTA click‑through"*, flag
+**`new-landing-hero`**, randomization unit **user**, variations
+`true` (treatment) vs `false` (control), metric **`hero-cta-click`**. The
+traffic generator fires `hero-cta-click` with the treatment converting a bit
+better than control, so the experiment shows a realistic, detectable lift.
+
+Open **Experiments → New landing hero** in LaunchDarkly to watch results
+populate (LD processes experiment data on a schedule, so allow a little time).
+Run `npm run traffic` again to add more samples until LaunchDarkly reports
+statistical significance, then make your ship/no‑ship call.
+
+> Prefer the UI? You can also build the same experiment by hand:
+> **Experiments → Create experiment**, flag `new-landing-hero`, metric
+> `hero-cta-click`, 50/50 on the fallthrough, then **Start**.
 
 > Clicking the hero CTA in the real UI also fires the metric
 > (`ldClient.track('hero-cta-click')`), so you can contribute live conversions too.
@@ -203,6 +207,7 @@ flag. To run the experiment:
 launchdarkly-se-exercise/
 ├── scripts/
 │   ├── bootstrap-launchdarkly.mjs   # creates all LD resources via REST API
+│   ├── setup-experiment.mjs         # creates + starts the experiment
 │   └── generate-traffic.mjs         # simulates visitors for the experiment
 ├── server/                          # Express backend
 │   ├── index.js                     # routes: /api/health, /api/chat
