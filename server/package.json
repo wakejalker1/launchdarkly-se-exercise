@@ -1,0 +1,20 @@
+{
+  "name": "se-exercise-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Express backend: server-side LD evaluation, experiment metric tracking, and the AI Configs chatbot.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.1",
+    "@launchdarkly/node-server-sdk": "^9.7.1",
+    "@launchdarkly/server-sdk-ai": "^0.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

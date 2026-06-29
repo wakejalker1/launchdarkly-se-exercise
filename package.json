@@ -1,0 +1,23 @@
+{
+  "name": "launchdarkly-se-exercise",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LaunchDarkly SE technical exercise: progressive delivery, targeting, experimentation, and AI Configs in a sample React + Node app.",
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "bootstrap": "node scripts/bootstrap-launchdarkly.mjs",
+    "traffic": "node scripts/generate-traffic.mjs",
+    "dev": "concurrently -n server,client -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace server run dev",
+    "dev:client": "npm --workspace client run dev",
+    "build": "npm --workspace client run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "dotenv": "^16.4.7"
+  }
+}
