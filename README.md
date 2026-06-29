@@ -17,6 +17,38 @@ manual clicking required to get the core demo running.
 
 ---
 
+## Demo
+
+### Part 1 — Release & Remediate (instant, no page reload)
+
+Toggling the flag in LaunchDarkly streams straight to the browser: the feature
+appears, a **“flag changed live” toast** fires from the explicit `on('change')`
+listener, and firing the remediation trigger rolls it back — all with **no page
+reload**.
+
+![Release and remediate — live toggle with listener toast](docs/release-listener.gif)
+
+### Part 2 — Targeting (individual + rule-based)
+
+Switching the active persona re-`identify()`s the SDK, so every flag re-evaluates
+live. Targeted users (individual key / enterprise / beta) get the new hero;
+everyone else falls into the experiment split — and the app explains *why* for
+each persona.
+
+![Targeting — switching personas re-evaluates flags live](docs/targeting.gif)
+
+| Control · Variation A (not targeted) | Treatment · Variation B (targeted) |
+| :---: | :---: |
+| ![control hero](docs/part2-control.png) | ![treatment hero](docs/part2-treatment.png) |
+
+### Live flag &amp; context inspector
+
+A built-in panel shows exactly what the SDK returns for the active context.
+
+![Flag and context inspector](docs/inspector.png)
+
+---
+
 ## 1. Architecture
 
 ```
